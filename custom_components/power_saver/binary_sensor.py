@@ -1,4 +1,4 @@
-"""Binary sensor platform for the Power Saver integration."""
+"""Binary sensor platform for the Power Saver Custom integration."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_NAME, DOMAIN
-from .coordinator import PowerSaverCoordinator
+from .coordinator import PowerSaverCustomCoordinator
 
 
 async def async_setup_entry(
@@ -22,15 +22,15 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Power Saver binary sensors from a config entry."""
-    coordinator: PowerSaverCoordinator = hass.data[DOMAIN][entry.entry_id]
+    """Set up Power Saver Custom binary sensors from a config entry."""
+    coordinator: PowerSaverCustomCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
         EmergencyModeBinarySensor(coordinator, entry),
     ])
 
 
 class EmergencyModeBinarySensor(
-    CoordinatorEntity[PowerSaverCoordinator], BinarySensorEntity
+    CoordinatorEntity[PowerSaverCustomCoordinator], BinarySensorEntity
 ):
     """Binary sensor indicating whether emergency mode is active."""
 
@@ -40,7 +40,7 @@ class EmergencyModeBinarySensor(
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(
-        self, coordinator: PowerSaverCoordinator, entry: ConfigEntry
+        self, coordinator: PowerSaverCustomCoordinator, entry: ConfigEntry
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
@@ -48,7 +48,7 @@ class EmergencyModeBinarySensor(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data[CONF_NAME],
-            manufacturer="Power Saver",
+            manufacturer="Power Saver Custom",
             model="Price Optimizer",
             entry_type="service",
         )
