@@ -1,4 +1,4 @@
-"""Switch platform for the Power Saver integration."""
+"""Switch platform for the Power Saver Custom integration."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_NAME, DOMAIN
-from .coordinator import PowerSaverCoordinator
+from .coordinator import PowerSaverCustomCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Power Saver switches from a config entry."""
-    coordinator: PowerSaverCoordinator = hass.data[DOMAIN][entry.entry_id]
+    """Set up Power Saver Custom switches from a config entry."""
+    coordinator: PowerSaverCustomCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
         ForceOnSwitch(coordinator, entry),
         ForceOffSwitch(coordinator, entry),
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class _ForceSwitch(
-    CoordinatorEntity[PowerSaverCoordinator], SwitchEntity, RestoreEntity
+    CoordinatorEntity[PowerSaverCustomCoordinator], SwitchEntity, RestoreEntity
 ):
     """Base class for force on/off override switches."""
 
@@ -43,7 +43,7 @@ class _ForceSwitch(
     _log_label: str  # human-readable label for logging, e.g. "Always on"
 
     def __init__(
-        self, coordinator: PowerSaverCoordinator, entry: ConfigEntry
+        self, coordinator: PowerSaverCustomCoordinator, entry: ConfigEntry
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
@@ -51,7 +51,7 @@ class _ForceSwitch(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data[CONF_NAME],
-            manufacturer="Power Saver",
+            manufacturer="Power Saver Custom",
             model="Price Optimizer",
             entry_type="service",
         )
