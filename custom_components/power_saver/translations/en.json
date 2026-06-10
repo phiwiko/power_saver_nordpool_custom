@@ -2,15 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Power Saver",
-        "description": "Configure a power saver instance for an appliance. Select which Nord Pool sensor to use for price data.",
+        "title": "Set up Power Saver Custom",
+        "description": "Configure a Power Saver Custom instance for an appliance. Select which Nord Pool sensor to use for price data.",
         "data": {
-          "nordpool_sensor": "Nord Pool sensor",
+          "nordpool_custom_sensor": "Nord Pool sensor",
           "name": "Name",
           "strategy": "Strategy"
         },
         "data_description": {
-          "nordpool_sensor": "The Nord Pool sensor to use for electricity prices.",
+          "nordpool_custom_sensor": "The Nord Pool sensor to use for electricity prices.",
           "name": "A descriptive name for this instance (e.g., 'Water Heater').",
           "strategy": "Lowest Price: activate cheapest hours within fixed time periods. Minimum Runtime: ensure a minimum number of hours are active within a rolling window."
         }
@@ -69,25 +69,25 @@
       }
     },
     "error": {
-      "nordpool_not_found": "No Nord Pool integration found. Please set up the Nord Pool integration (HACS or native) before configuring Power Saver.",
-      "already_configured": "A power saver with this name and sensor is already configured.",
+      "nordpool_custom_not_found": "No Nord Pool integration found. Please set up the Nord Pool integration (HACS or native) before configuring Power Saver Custom.",
+      "already_configured": "A Power Saver Custom with this name and sensor is already configured.",
       "rolling_window_too_small": "Rolling window must be at least as large as the minimum hours on."
     },
     "abort": {
-      "already_configured": "This power saver instance is already configured."
+      "already_configured": "This Power Saver Custom instance is already configured."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Power Saver Options",
+        "title": "Power Saver Custom Options",
         "description": "Select a scheduling strategy and Nord Pool sensor. Changes take effect immediately.",
         "data": {
-          "nordpool_sensor": "Nord Pool sensor",
+          "nordpool_custom_sensor": "Nord Pool sensor",
           "strategy": "Strategy"
         },
         "data_description": {
-          "nordpool_sensor": "The Nord Pool sensor to use for electricity prices.",
+          "nordpool_custom_sensor": "The Nord Pool sensor to use for electricity prices.",
           "strategy": "Lowest Price: activate cheapest hours within fixed time periods. Minimum Runtime: ensure a minimum number of hours are active within a rolling window."
         }
       },
@@ -211,7 +211,7 @@
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Power Saver device to configure."
+          "description": "The Power Saver Custom device to configure."
         },
         "hours": {
           "name": "Hours",
@@ -225,7 +225,7 @@
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Power Saver device to configure."
+          "description": "The Power Saver Custom device to configure."
         }
       }
     },
@@ -235,7 +235,7 @@
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Power Saver device to configure."
+          "description": "The Power Saver Custom device to configure."
         },
         "exclude_from": {
           "name": "Exclude from",
@@ -253,7 +253,7 @@
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Power Saver device to configure."
+          "description": "The Power Saver Custom device to configure."
         }
       }
     }
