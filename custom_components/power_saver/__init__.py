@@ -30,7 +30,7 @@ from .const import (
     SERVICE_SET_SCHEDULE_HOURS,
     validate_time_format,
 )
-from .coordinator import PowerSaverCoordinator
+from .coordinator import PowerSaverCustomCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,8 +70,8 @@ SERVICE_SET_EXCLUDE_TIMES_SCHEMA = vol.Schema(
 
 def _find_coordinator(
     hass: HomeAssistant, device_id: str
-) -> PowerSaverCoordinator:
-    """Resolve a device_id to its PowerSaverCoordinator.
+) -> PowerSaverCustomCoordinator:
+    """Resolve a device_id to its PowerSaverCustomCoordinator.
 
     Raises ValueError if the device doesn't belong to this integration.
     """
@@ -91,7 +91,7 @@ def _find_coordinator(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Power Saver Custom from a config entry."""
-    coordinator = PowerSaverCoordinator(hass, entry)
+    coordinator = PowerSaverCustomCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -190,7 +190,7 @@ async def _async_options_updated(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """Handle options update — trigger coordinator refresh."""
-    coordinator: PowerSaverCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PowerSaverCustomCoordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.async_request_refresh()
 
 
