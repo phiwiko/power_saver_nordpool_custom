@@ -1,6 +1,6 @@
 """Constants for the Power Saver Custom integration."""
 
-DOMAIN = "power_saver"
+DOMAIN = "power_saver_custom"
 
 
 def validate_time_format(value: object) -> tuple[bool, str | None]:
