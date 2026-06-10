@@ -1,4 +1,4 @@
-"""Config flow for the Power Saver integration."""
+"""Config flow for the Power Saver Custom integration."""
 
 from __future__ import annotations
 
@@ -45,8 +45,8 @@ from .const import (
     CONF_MIN_CONSECUTIVE_HOURS,
     CONF_MIN_HOURS_ON,
     CONF_NAME,
-    CONF_NORDPOOL_SENSOR,
-    CONF_NORDPOOL_TYPE,
+    CONF_nordpool_custom_SENSOR,
+    CONF_nordpool_custom_TYPE,
     CONF_PERIOD_FROM,
     CONF_PERIOD_TO,
     CONF_PRICE_SIMILARITY_PCT,
@@ -65,7 +65,7 @@ from .const import (
     STRATEGY_LOWEST_PRICE,
     STRATEGY_MINIMUM_RUNTIME,
 )
-from .nordpool_adapter import detect_nordpool_type, find_all_nordpool_sensors
+from .nordpool_custom_adapter import detect_nordpool_custom_type, find_all_nordpool_custom_sensors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,8 +106,8 @@ def _strategy_selector() -> SelectSelector:
     )
 
 
-class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Power Saver."""
+class PowerSaverCustomConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Power Saver Custom."""
 
     VERSION = 3
 
@@ -117,11 +117,11 @@ class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> PowerSaverOptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> PowerSaverCustomOptionsFlow:
         """Get the options flow for this handler."""
         if _LEGACY_OPTIONS_FLOW:
-            return PowerSaverOptionsFlow(config_entry)
-        return PowerSaverOptionsFlow()
+            return PowerSaverCustomOptionsFlow(config_entry)
+        return PowerSaverCustomOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -129,26 +129,26 @@ class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step 1: Sensor + Name + Strategy."""
         errors: dict[str, str] = {}
 
-        all_sensors = find_all_nordpool_sensors(self.hass)
+        all_sensors = find_all_nordpool_custom_sensors(self.hass)
 
         if user_input is not None:
-            nordpool_entity = user_input.get(CONF_NORDPOOL_SENSOR)
-            if not nordpool_entity:
-                errors["base"] = "nordpool_not_found"
+            nordpool_custom_entity = user_input.get(CONF_nordpool_custom_SENSOR)
+            if not nordpool_custom_entity:
+                errors["base"] = "nordpool_custom_not_found"
             else:
-                nordpool_type = detect_nordpool_type(self.hass, nordpool_entity)
-                if nordpool_type == "unknown":
-                    errors["base"] = "nordpool_not_found"
+                nordpool_custom_type = detect_nordpool_custom_type(self.hass, nordpool_custom_entity)
+                if nordpool_custom_type == "unknown":
+                    errors["base"] = "nordpool_custom_not_found"
 
             if not errors:
                 name = user_input[CONF_NAME]
-                unique_id = f"{nordpool_entity}_{slugify(name)}"
+                unique_id = f"{nordpool_custom_entity}_{slugify(name)}"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
                 self._user_input = {
-                    CONF_NORDPOOL_SENSOR: nordpool_entity,
-                    CONF_NORDPOOL_TYPE: nordpool_type,
+                    CONF_nordpool_custom_SENSOR: nordpool_custom_entity,
+                    CONF_nordpool_custom_TYPE: nordpool_custom_type,
                     CONF_NAME: name,
                     CONF_STRATEGY: user_input[CONF_STRATEGY],
                 }
@@ -159,7 +159,7 @@ class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_lowest_price()
 
         if not all_sensors:
-            errors["base"] = "nordpool_not_found"
+            errors["base"] = "nordpool_custom_not_found"
 
         sensor_options = [
             SelectOptionDict(value=entity_id, label=label)
@@ -173,7 +173,7 @@ class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_NORDPOOL_SENSOR, default=sensor_default
+                    CONF_nordpool_custom_SENSOR, default=sensor_default
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=sensor_options,
@@ -282,8 +282,8 @@ class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step 3: Common options (mode, thresholds, exclusion, entities)."""
         if user_input is not None:
             data = {
-                CONF_NORDPOOL_SENSOR: self._user_input[CONF_NORDPOOL_SENSOR],
-                CONF_NORDPOOL_TYPE: self._user_input[CONF_NORDPOOL_TYPE],
+                CONF_nordpool_custom_SENSOR: self._user_input[CONF_nordpool_custom_SENSOR],
+                CONF_nordpool_custom_TYPE: self._user_input[CONF_nordpool_custom_TYPE],
                 CONF_NAME: self._user_input[CONF_NAME],
             }
             strategy = self._user_input[CONF_STRATEGY]
@@ -388,8 +388,8 @@ class PowerSaverConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class PowerSaverOptionsFlow(OptionsFlowWithReload):
-    """Handle options flow for Power Saver."""
+class PowerSaverCustomOptionsFlow(OptionsFlowWithReload):
+    """Handle options flow for Power Saver Custom."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the options flow."""
@@ -405,21 +405,21 @@ class PowerSaverOptionsFlow(OptionsFlowWithReload):
 
         if user_input is not None:
             # Handle Nord Pool sensor change (stored in data, not options)
-            new_sensor = user_input.pop(CONF_NORDPOOL_SENSOR, None)
-            current_sensor = self.config_entry.data.get(CONF_NORDPOOL_SENSOR)
+            new_sensor = user_input.pop(CONF_nordpool_custom_SENSOR, None)
+            current_sensor = self.config_entry.data.get(CONF_nordpool_custom_SENSOR)
 
             if new_sensor and new_sensor != current_sensor:
-                new_type = detect_nordpool_type(self.hass, new_sensor)
+                new_type = detect_nordpool_custom_type(self.hass, new_sensor)
                 if new_type == "unknown":
                     _LOGGER.warning(
                         "Selected Nord Pool sensor %s could not be validated",
                         new_sensor,
                     )
-                    errors[CONF_NORDPOOL_SENSOR] = "nordpool_not_found"
+                    errors[CONF_nordpool_custom_SENSOR] = "nordpool_custom_not_found"
                 else:
                     new_data = dict(self.config_entry.data)
-                    new_data[CONF_NORDPOOL_SENSOR] = new_sensor
-                    new_data[CONF_NORDPOOL_TYPE] = new_type
+                    new_data[CONF_nordpool_custom_SENSOR] = new_sensor
+                    new_data[CONF_nordpool_custom_TYPE] = new_type
                     self.hass.config_entries.async_update_entry(
                         self.config_entry, data=new_data
                     )
@@ -432,8 +432,8 @@ class PowerSaverOptionsFlow(OptionsFlowWithReload):
                 return await self.async_step_lowest_price()
 
         # Build sensor selector
-        all_sensors = find_all_nordpool_sensors(self.hass)
-        current_sensor = self.config_entry.data.get(CONF_NORDPOOL_SENSOR, "")
+        all_sensors = find_all_nordpool_custom_sensors(self.hass)
+        current_sensor = self.config_entry.data.get(CONF_nordpool_custom_SENSOR, "")
 
         sensor_options = [
             SelectOptionDict(value=entity_id, label=label)
@@ -449,7 +449,7 @@ class PowerSaverOptionsFlow(OptionsFlowWithReload):
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_NORDPOOL_SENSOR, default=current_sensor
+                    CONF_nordpool_custom_SENSOR, default=current_sensor
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=sensor_options,
