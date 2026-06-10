@@ -1,16 +1,16 @@
 {
-  "domain": "power_saver",
-  "name": "Power Saver",
+  "domain": "power_saver_custom",
+  "name": "Power Saver Custom",
   "codeowners": [
     "@jyourstone"
   ],
   "config_flow": true,
   "dependencies": [
-    "nordpool"
+    "nordpool_custom"
   ],
-  "documentation": "https://github.com/jyourstone/power_saver",
+  "documentation": "https://github.com/jyourstone/power_saver_custom",
   "integration_type": "service",
   "iot_class": "calculated",
-  "issue_tracker": "https://github.com/jyourstone/power_saver/issues",
+  "issue_tracker": "https://github.com/jyourstone/power_saver_custom/issues",
   "version": "3.2.0"
 }
