@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the Power Saver integration."""
+"""DataUpdateCoordinator for the Power Saver Custom integration."""
 
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ from .const import (
     CONF_MIN_CONSECUTIVE_HOURS,
     CONF_HOURS_PER_PERIOD,
     CONF_MIN_HOURS_ON,
-    CONF_NORDPOOL_SENSOR,
-    CONF_NORDPOOL_TYPE,
+    CONF_nordpool_custom_SENSOR,
+    CONF_nordpool_custom_TYPE,
     CONF_PERIOD_FROM,
     CONF_PERIOD_TO,
     CONF_PRICE_SIMILARITY_PCT,
@@ -43,8 +43,8 @@ from .const import (
     DEFAULT_SELECTION_MODE,
     DEFAULT_STRATEGY,
     DOMAIN,
-    NORDPOOL_TYPE_HACS,
-    NORDPOOL_TYPE_NATIVE,
+    nordpool_custom_TYPE_HACS,
+    nordpool_custom_TYPE_NATIVE,
     STATE_ACTIVE,
     STATE_FORCED_OFF,
     STATE_FORCED_ON,
@@ -55,7 +55,7 @@ from .const import (
     validate_time_format,
 )
 from . import scheduler
-from .nordpool_adapter import async_get_prices
+from .nordpool_custom_adapter import async_get_prices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,8 +63,8 @@ STORAGE_VERSION = 2
 
 
 @dataclass
-class PowerSaverData:
-    """Data returned by the Power Saver coordinator."""
+class PowerSaverCustomData:
+    """Data returned by the Power Saver Custom coordinator."""
 
     schedule: list[dict] = field(default_factory=list)
     current_state: str = STATE_STANDBY
@@ -86,8 +86,8 @@ def _is_valid_time(value: object) -> bool:
     return is_valid
 
 
-class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
-    """Coordinator that manages Power Saver schedule updates."""
+class PowerSaverCustomCoordinator(DataUpdateCoordinator[PowerSaverCustomData]):
+    """Coordinator that manages Power Saver Custom schedule updates."""
 
     config_entry: ConfigEntry
 
@@ -100,12 +100,12 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
             config_entry=entry,
             update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
         )
-        self._nordpool_entity = entry.data[CONF_NORDPOOL_SENSOR]
-        self._nordpool_type = entry.data.get(CONF_NORDPOOL_TYPE, NORDPOOL_TYPE_HACS)
+        self._nordpool_custom_entity = entry.data[CONF_nordpool_custom_SENSOR]
+        self._nordpool_custom_type = entry.data.get(CONF_nordpool_custom_TYPE, nordpool_custom_TYPE_HACS)
         self._store = Store(hass, STORAGE_VERSION, f"power_saver.{entry.entry_id}")
         self._last_on_time: datetime | None = None
         self._state_loaded = False
-        self._unsub_nordpool: callback | None = None
+        self._unsub_nordpool_custom: callback | None = None
         self._unsub_native_coordinator: callback | None = None
         self._previous_state: str | None = None
         self._force_on: bool = False
@@ -212,8 +212,8 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
     async def _async_setup(self) -> None:
         """Set up the coordinator (called once on first refresh)."""
         # Register Nord Pool state change listener for immediate recalculation
-        self._unsub_nordpool = async_track_state_change_event(
-            self.hass, [self._nordpool_entity], self._on_nordpool_update
+        self._unsub_nordpool_custom = async_track_state_change_event(
+            self.hass, [self._nordpool_custom_entity], self._on_nordpool_custom_update
         )
 
         # For native Nord Pool, also subscribe to the native coordinator's
@@ -222,11 +222,11 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
         # the price itself changes — it does NOT fire a state change when
         # tomorrow's data becomes available. Subscribing directly ensures
         # we refresh promptly when new price data is fetched.
-        if self._nordpool_type == NORDPOOL_TYPE_NATIVE:
+        if self._nordpool_custom_type == nordpool_custom_TYPE_NATIVE:
             self._subscribe_native_coordinator()
 
     @callback
-    def _on_nordpool_update(self, event: Event) -> None:
+    def _on_nordpool_custom_update(self, event: Event) -> None:
         """Handle Nord Pool sensor state change."""
         _LOGGER.debug("Nord Pool sensor updated, requesting refresh")
         self.hass.async_create_task(self.async_request_refresh())
@@ -241,7 +241,7 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
 
         try:
             registry = er.async_get(self.hass)
-            entity_entry = registry.async_get(self._nordpool_entity)
+            entity_entry = registry.async_get(self._nordpool_custom_entity)
             if entity_entry is None or entity_entry.config_entry_id is None:
                 return
 
@@ -368,23 +368,23 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
 
         return False
 
-    async def _async_update_data(self) -> PowerSaverData:
+    async def _async_update_data(self) -> PowerSaverCustomData:
         """Fetch data from Nord Pool sensor and compute schedule."""
         # Retry native coordinator subscription if not yet established
-        if self._nordpool_type == NORDPOOL_TYPE_NATIVE:
+        if self._nordpool_custom_type == nordpool_custom_TYPE_NATIVE:
             self._subscribe_native_coordinator()
 
         now = dt_util.now()
 
         # Read Nord Pool state
-        nordpool_state = self.hass.states.get(self._nordpool_entity)
-        if nordpool_state is None:
+        nordpool_custom_state = self.hass.states.get(self._nordpool_custom_entity)
+        if nordpool_custom_state is None:
             raise UpdateFailed(
-                f"Nord Pool sensor {self._nordpool_entity} not available"
+                f"Nord Pool sensor {self._nordpool_custom_entity} not available"
             )
 
         raw_today, raw_tomorrow = await async_get_prices(
-            self.hass, self._nordpool_entity, self._nordpool_type
+            self.hass, self._nordpool_custom_entity, self._nordpool_custom_type
         )
 
         # Load persisted state on first run
@@ -449,7 +449,7 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
                     "status": STATE_ACTIVE,
                 })
 
-            return PowerSaverData(
+            return PowerSaverCustomData(
                 schedule=emergency_schedule,
                 current_state=current_state,
                 active_slots=96,
@@ -550,7 +550,7 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
                 await self._control_entities(current_state)
                 self._previous_state = current_state
 
-        return PowerSaverData(
+        return PowerSaverCustomData(
             schedule=schedule,
             current_state=current_state,
             current_price=round(current_price, 3) if current_price is not None else None,
@@ -666,9 +666,9 @@ class PowerSaverCoordinator(DataUpdateCoordinator[PowerSaverData]):
     async def async_shutdown(self) -> None:
         """Clean up listeners and persist state."""
         await self._async_save_state()
-        if self._unsub_nordpool:
-            self._unsub_nordpool()
-            self._unsub_nordpool = None
+        if self._unsub_nordpool_custom:
+            self._unsub_nordpool_custom()
+            self._unsub_nordpool_custom = None
         if self._unsub_native_coordinator:
             self._unsub_native_coordinator()
             self._unsub_native_coordinator = None
