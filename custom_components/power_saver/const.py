@@ -1,4 +1,4 @@
-"""Constants for the Power Saver integration."""
+"""Constants for the Power Saver Custom integration."""
 
 DOMAIN = "power_saver"
 
@@ -21,13 +21,13 @@ def validate_time_format(value: object) -> tuple[bool, str | None]:
     return True, None
 
 # Config entry data keys (immutable after creation)
-CONF_NORDPOOL_SENSOR = "nordpool_sensor"
-CONF_NORDPOOL_TYPE = "nordpool_type"
+CONF_nordpool_custom_SENSOR = "nordpool_custom_sensor"
+CONF_nordpool_custom_TYPE = "nordpool_custom_type"
 CONF_NAME = "name"
 
-# Nordpool sensor types
-NORDPOOL_TYPE_HACS = "hacs"
-NORDPOOL_TYPE_NATIVE = "native"
+# nordpool_custom sensor types
+nordpool_custom_TYPE_HACS = "hacs"
+nordpool_custom_TYPE_NATIVE = "native"
 
 # Options keys (changeable via options flow)
 CONF_STRATEGY = "strategy"
