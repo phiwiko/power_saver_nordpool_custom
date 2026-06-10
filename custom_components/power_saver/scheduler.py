@@ -1,4 +1,4 @@
-"""Pure scheduling algorithm for the Power Saver integration.
+"""Pure scheduling algorithm for the Power Saver Custom integration.
 
 This module contains no Home Assistant dependencies and can be tested independently.
 It provides two scheduling strategies:
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 def _to_datetime(value: str | datetime) -> datetime:
     """Convert a value to a datetime, handling both strings and datetime objects.
 
-    Nordpool stores start/end as datetime objects when accessed via hass.states.get(),
+    nordpool_custom stores start/end as datetime objects when accessed via hass.states.get(),
     but as ISO strings when accessed via the WebSocket API (e.g., AppDaemon).
     """
     if isinstance(value, datetime):
@@ -112,7 +112,7 @@ def _build_base_schedule(
     exclude_from: str | None,
     exclude_until: str | None,
 ) -> list[dict]:
-    """Build a time-sorted schedule from raw Nordpool slots.
+    """Build a time-sorted schedule from raw nordpool_custom slots.
 
     All slots are initially marked as standby (or excluded if in the exclusion range).
     """
@@ -150,7 +150,7 @@ def _process_day_slots(
 ) -> tuple[list[dict], int]:
     """Process a group of price-sorted slots into schedule entries.
 
-    This function creates new schedule entries from raw Nordpool slots,
+    This function creates new schedule entries from raw nordpool_custom slots,
     applying the activation quota, thresholds, and exclusion rules.
 
     Args:
@@ -621,8 +621,8 @@ def build_lowest_price_schedule(
     Each period gets its own independent activation quota.
 
     Args:
-        raw_today: Nordpool raw_today attribute (list of dicts with start, end, value).
-        raw_tomorrow: Nordpool raw_tomorrow attribute (may be empty).
+        raw_today: nordpool_custom raw_today attribute (list of dicts with start, end, value).
+        raw_tomorrow: nordpool_custom raw_tomorrow attribute (may be empty).
         min_hours: Hours to activate per period.
         now: Current datetime (timezone-aware).
         period_from: Period start time ("HH:MM"). Default "00:00".
@@ -759,8 +759,8 @@ def build_minimum_runtime_schedule(
     Iteratively fills rolling windows across the schedule horizon.
 
     Args:
-        raw_today: Nordpool raw_today attribute.
-        raw_tomorrow: Nordpool raw_tomorrow attribute (may be empty).
+        raw_today: nordpool_custom raw_today attribute.
+        raw_tomorrow: nordpool_custom raw_tomorrow attribute (may be empty).
         min_hours_on: Minimum total hours to activate per rolling window.
         now: Current datetime (timezone-aware).
         max_hours_off: Maximum hours the device can stay off.
@@ -993,8 +993,8 @@ def build_schedule(
     """Build a schedule by dispatching to the appropriate strategy.
 
     Args:
-        raw_today: Nordpool raw_today attribute (list of dicts with start, end, value).
-        raw_tomorrow: Nordpool raw_tomorrow attribute (may be empty).
+        raw_today: nordpool_custom raw_today attribute (list of dicts with start, end, value).
+        raw_tomorrow: nordpool_custom raw_tomorrow attribute (may be empty).
         min_hours: In Lowest Price: hours to activate per period.
                    In Minimum Runtime: minimum hours to run per window.
         now: Current datetime (timezone-aware).
