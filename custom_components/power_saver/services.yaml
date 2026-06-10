@@ -7,11 +7,11 @@ set_schedule_hours:
   fields:
     device_id:
       name: Device
-      description: The Power Saver device to configure.
+      description: The Power Saver Custom device to configure.
       required: true
       selector:
         device:
-          integration: power_saver
+          integration: power_saver_custom
     hours:
       name: Hours
       description: >-
@@ -34,11 +34,11 @@ clear_schedule_hours_override:
   fields:
     device_id:
       name: Device
-      description: The Power Saver device to configure.
+      description: The Power Saver Custom device to configure.
       required: true
       selector:
         device:
-          integration: power_saver
+          integration: power_saver_custom
 
 set_exclude_times:
   name: Set exclude times
@@ -49,11 +49,11 @@ set_exclude_times:
   fields:
     device_id:
       name: Device
-      description: The Power Saver device to configure.
+      description: The Power Saver Custom device to configure.
       required: true
       selector:
         device:
-          integration: power_saver
+          integration: power_saver_custom
     exclude_from:
       name: Exclude from
       description: >-
@@ -78,8 +78,8 @@ clear_exclude_times_override:
   fields:
     device_id:
       name: Device
-      description: The Power Saver device to configure.
+      description: The Power Saver Custom device to configure.
       required: true
       selector:
         device:
-          integration: power_saver
+          integration: power_saver_custom
