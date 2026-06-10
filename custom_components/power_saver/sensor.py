@@ -1,4 +1,4 @@
-"""Sensor platform for the Power Saver integration."""
+"""Sensor platform for the Power Saver Custom integration."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_NAME, DOMAIN, STATE_ACTIVE, STATE_EXCLUDED, STATE_FORCED_OFF, STATE_FORCED_ON, STATE_STANDBY
-from .coordinator import PowerSaverCoordinator, PowerSaverData
+from .coordinator import PowerSaverCustomCoordinator, PowerSaverCustomData
 
 
 async def async_setup_entry(
@@ -25,11 +25,11 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Power Saver sensors from a config entry."""
-    coordinator: PowerSaverCoordinator = hass.data[DOMAIN][entry.entry_id]
+    """Set up Power Saver Custom sensors from a config entry."""
+    coordinator: PowerSaverCustomCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[SensorEntity] = [
-        PowerSaverSensor(coordinator, entry),
+        PowerSaverCustomSensor(coordinator, entry),
         ScheduleSensor(coordinator, entry),
         LastActiveSensor(coordinator, entry),
         ActiveHoursInPeriodSensor(coordinator, entry),
@@ -41,8 +41,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PowerSaverSensor(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
-    """Main sensor entity for Power Saver status."""
+class PowerSaverCustomSensor(CoordinatorEntity[PowerSaverCustomCoordinator], SensorEntity):
+    """Main sensor entity for Power Saver Custom status."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "status"
@@ -50,7 +50,7 @@ class PowerSaverSensor(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
     _attr_options = [STATE_ACTIVE, STATE_STANDBY, STATE_EXCLUDED, STATE_FORCED_ON, STATE_FORCED_OFF]
 
     def __init__(
-        self, coordinator: PowerSaverCoordinator, entry: ConfigEntry
+        self, coordinator: PowerSaverCustomCoordinator, entry: ConfigEntry
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -58,7 +58,7 @@ class PowerSaverSensor(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data[CONF_NAME],
-            manufacturer="Power Saver",
+            manufacturer="Power Saver Custom",
             model="Price Optimizer",
             entry_type="service",
         )
@@ -91,7 +91,7 @@ class PowerSaverSensor(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
         """Return user-facing attributes."""
         if self.coordinator.data is None:
             return {}
-        data: PowerSaverData = self.coordinator.data
+        data: PowerSaverCustomData = self.coordinator.data
         attrs = {
             "current_price": data.current_price,
             "min_price": data.min_price,
@@ -110,14 +110,14 @@ class PowerSaverSensor(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
 # --- Diagnostic sensors ---
 
 
-class _DiagnosticBase(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
-    """Base class for Power Saver diagnostic sensors."""
+class _DiagnosticBase(CoordinatorEntity[PowerSaverCustomCoordinator], SensorEntity):
+    """Base class for Power Saver Custom diagnostic sensors."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, coordinator: PowerSaverCoordinator, entry: ConfigEntry
+        self, coordinator: PowerSaverCustomCoordinator, entry: ConfigEntry
     ) -> None:
         """Initialize the diagnostic sensor."""
         super().__init__(coordinator)
@@ -125,7 +125,7 @@ class _DiagnosticBase(CoordinatorEntity[PowerSaverCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data[CONF_NAME],
-            manufacturer="Power Saver",
+            manufacturer="Power Saver Custom",
             model="Price Optimizer",
             entry_type="service",
         )
