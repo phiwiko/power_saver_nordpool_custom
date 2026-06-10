@@ -1,4 +1,4 @@
-"""Adapter for fetching prices from HACS Nordpool, native HA Nordpool, or custom Nordpool sensors."""
+"""Adapter for fetching prices from HACS nordpool_custom or native HA nordpool_custom."""
 
 from __future__ import annotations
 
@@ -10,30 +10,28 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .const import NORDPOOL_TYPE_HACS, NORDPOOL_TYPE_NATIVE
+from .const import nordpool_custom_TYPE_HACS, nordpool_custom_TYPE_NATIVE
 
 _LOGGER = logging.getLogger(__name__)
 
-def detect_nordpool_type(hass: HomeAssistant, entity_id: str) -> str:
-    """Detect whether an entity is a HACS Nord Pool, native HA Nord Pool, or custom Nordpool sensor.
+
+def detect_nordpool_custom_type(hass: HomeAssistant, entity_id: str) -> str:
+    """Detect whether an entity is a HACS Nord Pool or native HA Nord Pool sensor.
 
     Returns:
         "hacs", "native", or "unknown".
     """
     state = hass.states.get(entity_id)
     if state is not None and state.attributes.get("raw_today") is not None:
-        return NORDPOOL_TYPE_HACS  # Erkennt HACS-Nordpool UND nordpool_custom-Sensoren
+        return nordpool_custom_TYPE_HACS
 
     registry = er.async_get(hass)
     entity_entry = registry.async_get(entity_id)
-    if entity_entry is not None and entity_entry.platform == "nordpool":
-        return NORDPOOL_TYPE_NATIVE
-
-    # NEU: Prüfe auf nordpool_custom-Sensoren
-    if entity_entry is not None and entity_entry.domain == "nordpool_custom":
-        return NORDPOOL_TYPE_HACS  # Behandle nordpool_custom als HACS-Nordpool
+    if entity_entry is not None and entity_entry.platform == "nordpool_custom":
+        return nordpool_custom_TYPE_NATIVE
 
     return "unknown"
+
 
 def _get_friendly_name(hass: HomeAssistant, entity_id: str) -> str:
     """Get the friendly name for an entity, falling back to entity_id."""
@@ -42,40 +40,36 @@ def _get_friendly_name(hass: HomeAssistant, entity_id: str) -> str:
         return state.attributes.get("friendly_name", entity_id)
     return entity_id
 
-def find_all_nordpool_sensors(
+
+def find_all_nordpool_custom_sensors(
     hass: HomeAssistant,
 ) -> list[tuple[str, str, str]]:
-    """Find all available Nord Pool sensors (HACS, native, and custom).
+    """Find all available Nord Pool sensors (HACS and native).
 
     For native Nord Pool, only returns the main "current price" sensor per
     config entry (filters out diagnostic/statistical sensors).
 
     Returns:
-        List of (entity_id, nordpool_type, label) tuples.
+        List of (entity_id, nordpool_custom_type, label) tuples.
     """
     registry = er.async_get(hass)
     found: list[tuple[str, str, str]] = []
     seen_entity_ids: set[str] = set()
 
-    # Check for HACS Nord Pool and nordpool_custom sensors
+    # Check for HACS Nord Pool: nordpool_custom platform sensor with raw_today attribute
     for entity_entry in registry.entities.values():
-        if entity_entry.domain != "sensor":
+        if entity_entry.domain != "sensor" or entity_entry.platform != "nordpool_custom":
             continue
+        state = hass.states.get(entity_entry.entity_id)
+        if state is not None and state.attributes.get("raw_today") is not None:
+            label = _get_friendly_name(hass, entity_entry.entity_id)
+            _LOGGER.debug("Found HACS Nord Pool sensor: %s", entity_entry.entity_id)
+            found.append((entity_entry.entity_id, nordpool_custom_TYPE_HACS, label))
+            seen_entity_ids.add(entity_entry.entity_id)
 
-        # Prüfe auf HACS-Nordpool oder nordpool_custom
-        if entity_entry.platform == "nordpool" or entity_entry.domain == "nordpool_custom":
-            state = hass.states.get(entity_entry.entity_id)
-            if state is not None and state.attributes.get("raw_today") is not None:
-                label = _get_friendly_name(hass, entity_entry.entity_id)
-                _LOGGER.debug("Found Nord Pool sensor: %s (type: %s)",
-                             entity_entry.entity_id,
-                             "hacs" if entity_entry.platform == "nordpool" else "custom")
-                found.append((entity_entry.entity_id, NORDPOOL_TYPE_HACS, label))
-                seen_entity_ids.add(entity_entry.entity_id)
-
-    # Check for native Nord Pool: all config entries with domain "nordpool"
+    # Check for native Nord Pool: all config entries with domain "nordpool_custom"
     # Native unique_id format: "{area}-{key}" — only include "current_price" sensors
-    for config_entry in hass.config_entries.async_entries("nordpool"):
+    for config_entry in hass.config_entries.async_entries("nordpool_custom"):
         entity_entries = er.async_entries_for_config_entry(
             registry, config_entry.entry_id
         )
@@ -91,55 +85,58 @@ def find_all_nordpool_sensors(
                     "Found native Nord Pool sensor: %s",
                     entity_entry.entity_id,
                 )
-                found.append((entity_entry.entity_id, NORDPOOL_TYPE_NATIVE, label))
+                found.append((entity_entry.entity_id, nordpool_custom_TYPE_NATIVE, label))
                 seen_entity_ids.add(entity_entry.entity_id)
 
     return found
 
-def auto_detect_nordpool(
+
+def auto_detect_nordpool_custom(
     hass: HomeAssistant,
 ) -> tuple[str, str] | tuple[None, None]:
-    """Auto-detect a Nord Pool integration (HACS, native, or custom).
+    """Auto-detect a Nord Pool integration (HACS or native).
 
     Checks for HACS Nord Pool first (entity with raw_today attribute),
-    then falls back to native HA Nord Pool (config entry with domain "nordpool").
+    then falls back to native HA Nord Pool (config entry with domain "nordpool_custom").
 
     Returns:
-        Tuple of (entity_id, nordpool_type) or (None, None) if not found.
+        Tuple of (entity_id, nordpool_custom_type) or (None, None) if not found.
     """
-    sensors = find_all_nordpool_sensors(hass)
+    sensors = find_all_nordpool_custom_sensors(hass)
     if sensors:
-        entity_id, nordpool_type, _label = sensors[0]
-        return entity_id, nordpool_type
+        entity_id, nordpool_custom_type, _label = sensors[0]
+        return entity_id, nordpool_custom_type
     return None, None
+
 
 async def async_get_prices(
     hass: HomeAssistant,
     entity_id: str,
-    nordpool_type: str,
+    nordpool_custom_type: str,
 ) -> tuple[list[dict], list[dict]]:
     """Fetch today's and tomorrow's prices, normalized to [{start, end, value}].
 
     Args:
         hass: Home Assistant instance.
         entity_id: The Nord Pool sensor entity ID.
-        nordpool_type: "hacs" or "native".
+        nordpool_custom_type: "hacs" or "native".
 
     Returns:
         Tuple of (raw_today, raw_tomorrow) in HACS-compatible format.
     """
-    if nordpool_type == NORDPOOL_TYPE_HACS:
+    if nordpool_custom_type == nordpool_custom_TYPE_HACS:
         return _get_hacs_prices(hass, entity_id)
-    if nordpool_type == NORDPOOL_TYPE_NATIVE:
+    if nordpool_custom_type == nordpool_custom_TYPE_NATIVE:
         return await _async_get_native_prices(hass, entity_id)
 
-    _LOGGER.error("Unknown nordpool_type: %s", nordpool_type)
+    _LOGGER.error("Unknown nordpool_custom_type: %s", nordpool_custom_type)
     return [], []
+
 
 def _get_hacs_prices(
     hass: HomeAssistant, entity_id: str
 ) -> tuple[list[dict], list[dict]]:
-    """Read prices from HACS Nord Pool or custom sensor attributes."""
+    """Read prices from HACS Nord Pool sensor attributes."""
     state = hass.states.get(entity_id)
     if state is None:
         return [], []
@@ -147,6 +144,7 @@ def _get_hacs_prices(
     raw_today = state.attributes.get("raw_today") or []
     raw_tomorrow = state.attributes.get("raw_tomorrow") or []
     return raw_today, raw_tomorrow
+
 
 async def _async_get_native_prices(
     hass: HomeAssistant, entity_id: str
@@ -168,6 +166,11 @@ async def _async_get_native_prices(
     config_entry_id = entity_entry.config_entry_id
 
     # Primary: read directly from native coordinator's cached data.
+    # The native coordinator fetches yesterday+today+tomorrow in a single
+    # batch API call (async_get_delivery_periods). Reading from its cache
+    # is more reliable than the service call which uses a different API
+    # method (async_get_delivery_period, singular) that may not return
+    # future dates reliably.
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     if config_entry is not None:
         result = _get_native_coordinator_prices(config_entry)
@@ -190,10 +193,18 @@ async def _async_get_native_prices(
 
     return raw_today, raw_tomorrow
 
+
 def _get_native_coordinator_prices(
     config_entry,
 ) -> tuple[list[dict], list[dict]] | None:
-    """Read prices directly from the native Nord Pool coordinator's cached data."""
+    """Read prices directly from the native Nord Pool coordinator's cached data.
+
+    The native coordinator stores DeliveryPeriodsData with entries for
+    yesterday, today, and tomorrow. Each entry has a requested_date (str)
+    and entries (list of DeliveryPeriodEntry with start, end, entry attrs).
+
+    Returns (today_prices, tomorrow_prices) or None if unable to read.
+    """
     coordinator = getattr(config_entry, "runtime_data", None)
     if coordinator is None:
         return None
@@ -258,13 +269,14 @@ def _get_native_coordinator_prices(
 
     return today_prices, tomorrow_prices
 
+
 async def _async_fetch_native_date(
     hass: HomeAssistant, config_entry_id: str, target_date: date
 ) -> list[dict]:
-    """Call nordpool.get_prices_for_date and convert to standard format."""
+    """Call nordpool_custom.get_prices_for_date and convert to standard format."""
     try:
         response = await hass.services.async_call(
-            "nordpool",
+            "nordpool_custom",
             "get_prices_for_date",
             {
                 "config_entry": config_entry_id,
@@ -286,11 +298,18 @@ async def _async_fetch_native_date(
 
     return _convert_native_response(response)
 
+
 def _convert_native_response(response: dict | list) -> list[dict]:
-    """Convert native Nord Pool service response to HACS-compatible format."""
+    """Convert native Nord Pool service response to HACS-compatible format.
+
+    Native response is grouped by area: {"SE4": [{"start": ..., "end": ..., "price": ...}, ...]}
+    We pick the first area and convert price from Currency/MWh to Currency/kWh.
+    """
+    # The response may be a dict keyed by area or a list directly
     price_list: list[dict] = []
 
     if isinstance(response, dict):
+        # Grouped by area — pick the first area
         for _area, prices in response.items():
             if isinstance(prices, list):
                 price_list = prices
@@ -307,13 +326,16 @@ def _convert_native_response(response: dict | list) -> list[dict]:
         try:
             start = entry.get("start")
             end = entry.get("end")
+            # Native uses "price" in Currency/MWh
             price_mwh = entry.get("price")
 
             if start is None or price_mwh is None:
                 continue
 
+            # Convert MWh to kWh
             price_kwh = float(price_mwh) / 1000.0
 
+            # If no explicit end, assume 1-hour slots
             if end is None:
                 start_dt = (
                     start
@@ -321,6 +343,7 @@ def _convert_native_response(response: dict | list) -> list[dict]:
                     else datetime.fromisoformat(start)
                 )
                 end_dt = start_dt + timedelta(hours=1)
+                # Preserve the same type as start
                 end = end_dt if isinstance(start, datetime) else end_dt.isoformat()
 
             converted.append({
