@@ -1,4 +1,4 @@
-"""The Power Saver integration."""
+"""The Power Saver Custom integration."""
 
 from __future__ import annotations
 
@@ -79,18 +79,18 @@ def _find_coordinator(
     device = registry.async_get(device_id)
     if device is None:
         raise ValueError(f"Device {device_id} not found")
-    # Find the config entry that belongs to Power Saver
+    # Find the config entry that belongs to Power Saver Custom
     for entry_id in device.config_entries:
         coordinator = hass.data.get(DOMAIN, {}).get(entry_id)
         if coordinator is not None:
             return coordinator
     raise ValueError(
-        f"Device {device_id} is not a Power Saver device"
+        f"Device {device_id} is not a Power Saver Custom device"
     )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Power Saver from a config entry."""
+    """Set up Power Saver Custom from a config entry."""
     coordinator = PowerSaverCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coord = _find_coordinator(hass, device_id)
         except ValueError as err:
             raise HomeAssistantError(
-                f"Device {device_id} not found or not a Power Saver device"
+                f"Device {device_id} not found or not a Power Saver Custom device"
             ) from err
         await coord.async_set_hours_override(hours)
 
@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coord = _find_coordinator(hass, device_id)
         except ValueError as err:
             raise HomeAssistantError(
-                f"Device {device_id} not found or not a Power Saver device"
+                f"Device {device_id} not found or not a Power Saver Custom device"
             ) from err
         await coord.async_clear_hours_override()
 
@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coord = _find_coordinator(hass, device_id)
         except ValueError as err:
             raise HomeAssistantError(
-                f"Device {device_id} not found or not a Power Saver device"
+                f"Device {device_id} not found or not a Power Saver Custom device"
             ) from err
         await coord.async_set_exclude_times_override(exclude_from, exclude_until)
 
@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coord = _find_coordinator(hass, device_id)
         except ValueError as err:
             raise HomeAssistantError(
-                f"Device {device_id} not found or not a Power Saver device"
+                f"Device {device_id} not found or not a Power Saver Custom device"
             ) from err
         await coord.async_clear_exclude_times_override()
 
